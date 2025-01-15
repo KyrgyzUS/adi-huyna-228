@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Управление Складом</title>
+  <style>
+    /* Базовые стили */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h2, h3 {
+      margin-top: 0;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f4f4f4;
+      cursor: pointer;
+    }
+
+    button {
+      width: auto;
+      padding: 8px 12px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    /* Стили для модальных окон */
+    .modal {
+      display: none; /* Скрыто по умолчанию */
+      position: fixed; /* Остается на месте */
+      z-index: 1; /* На вершине */
+      left: 0;
+      top: 0;
+      width: 100%; /* Полная ширина */
+      height: 100%; /* Полная высота */
+      overflow: auto; /* Включить прокрутку при необходимости */
+      background-color: rgba(0,0,0,0.4); /* Черный с прозрачностью */
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto; /* 5% сверху и по центру */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 50%; /* Ширина модального окна */
+      border-radius: 5px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+    }
+
+    /* Стили для кнопок навигации */
+    .nav-button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    /* Стили для скрытия кнопки перемещения товаров для продавцов */
+    #moveProductBtn {
+      margin-top: 10px;
+    }
+
+    /* Стили для секции деталей склада */
+    #warehouseDetailSection {
+      display: none;
+    }
+
+    /* Стили для индикаторов сортировки */
+    th[data-sort]::after {
+      content: ' \25B2\25BC'; /* Стрелки вверх и вниз */
+      font-size: 0.8em;
+      margin-left: 5px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- Форма входа -->
+  <form id="loginForm">
+    <h2>Вход</h2>
+    <label for="username">Логин:</label>
+    <input type="text" id="username" required>
+    
+    <label for="password">Пароль:</label>
+    <input type="password" id="password" required>
+    
+    <button type="submit">Войти</button>
+  </form>
+
+  <!-- Секция владельца -->
+  <section id="ownerSection" style="display:none;">
+    <h2>Управление Складами</h2>
+    <button id="logoutBtn">Выйти</button>
+
+    <form id="addWarehouseForm">
+      <h3>Добавить Новый Склад</h3>
+      <label for="warehouseName">Название склада:</label>
+      <input type="text" id="warehouseName" required>
+      
+      <label for="warehouseDescription">Описание:</label>
+      <textarea id="warehouseDescription"></textarea>
+      
+      <button type="submit">Добавить склад</button>
+    </form>
+
+    <!-- Кнопки для перемещения товара и для должников -->
+    <div style="margin-top: 10px;">
+      <button id="moveProductBtn">Переместить товар</button>
+      <button id="debtorsBtn">Должники</button>
+    </div>
+
+    <table id="warehousesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Название</th>
+          <th>Описание</th>
+          <th>Продавец</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Склады будут заполнены через JavaScript -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Секция продавца -->
+  <section id="sellerSection" style="display:none;">
+    <h2>Управление Продуктами</h2>
+    <button id="logoutBtn">Выйти</button>
+    <label for="warehouseSelect">Выберите склад:</label>
+    <select id="warehouseSelect" required>
+      <option value="">-- Выберите склад --</option>
+      <!-- Опции будут заполнены через JavaScript -->
+    </select>
+
+    <button id="addProductBtn">Добавить продукт</button>
+
+    <table id="productsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Название</th>
+          <th>Количество</th>
+          <th>Цена</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Продукты будут заполнены через JavaScript -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Секция деталей склада -->
+  <section id="warehouseDetailSection">
+    <h2>Детали Склада</h2>
+    <button id="backToOwnerBtn" class="nav-button">Назад к складам</button>
+    <form id="editWarehouseForm">
+      <input type="hidden" id="editWarehouseId">
+      
+      <label for="editWarehouseName">Название склада:</label>
+      <input type="text" id="editWarehouseName" required>
+      
+      <label for="editWarehouseDescription">Описание:</label>
+      <textarea id="editWarehouseDescription"></textarea>
+      
+      <label for="editWarehouseSeller">Продавец:</label>
+      <select id="editWarehouseSeller">
+        <option value="">-- Выберите продавца --</option>
+        <!-- Опции будут заполнены через JavaScript -->
+      </select>
+      
+      <button type="submit">Сохранить изменения</button>
+    </form>
+
+    <!-- Поле поиска -->
+    <div>
+      <label for="searchWarehouseProduct">Поиск по названию:</label>
+      <input type="text" id="searchWarehouseProduct" placeholder="Введите название товара">
+    </div>
+
+    <!-- Таблица товаров на складе -->
+    <h3>Товары на складе</h3>
+    <button id="addProductToWarehouseBtn">Добавить товар</button>
+    <table id="warehouseProductsTable">
+      <thead>
+        <tr>
+          <th data-sort="id">ID</th>
+          <th data-sort="name">Название</th>
+          <th data-sort="quantity">Количество</th>
+          <th data-sort="price">Цена</th>
+          <th>Действия</th>
+         
+          
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Товары будут заполнены через JavaScript -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Модальное окно продажи товара -->
+<div id="sellProductModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="sellProductClose">&times;</span>
+    <h2>Продажа товара</h2>
+    <form id="sellProductForm">
+      <input type="hidden" id="sellProductId">
+      
+      <!-- Количество товара для продажи -->
+      <label for="sellQuantity">Количество:</label>
+      <input type="number" id="sellQuantity" min="1" required>
+
+      <!-- Скидка (в деньгах) -->
+      <label for="sellDiscount">Скидка (сумма):</label>
+      <input type="number" id="sellDiscount" min="0" step="0.01" value="0">
+
+      <!-- Способ оплаты -->
+      <label for="paymentMethod">Способ оплаты:</label>
+      <select id="paymentMethod" required>
+        <option value="">-- Выберите способ --</option>
+        <option value="mbank">Мбанк</option>
+        <option value="cash">Наличка</option>
+        <option value="debtor">Должник</option>
+      </select>
+
+      <!-- Выпадающий список должников, показываем только если "Должник" -->
+      <div id="debtorSelectContainer" style="display: none;">
+        <label for="debtorSelect">Выберите должника:</label>
+        <select id="debtorSelect">
+          <option value="">-- Выберите должника --</option>
+        </select>
+      </div>
+
+      <button type="submit">Подтвердить продажу</button>
+    </form>
+  </div>
+</div>
+
+  <!-- Модальное окно для перемещения товара -->
+  <div id="moveProductModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="moveProductClose">&times;</span>
+      <h2>Переместить товар</h2>
+      <form id="moveProductForm">
+        <label for="productSelect">Выберите товар:</label>
+        <select id="productSelect" required>
+          <option value="">-- Выберите товар --</option>
+          <!-- Опции будут заполнены через JavaScript -->
+        </select>
+
+        <label for="fromWarehouse">Исходный склад:</label>
+        <select id="fromWarehouse" required>
+          <option value="">-- Выберите исходный склад --</option>
+          <!-- Опции будут заполнены через JavaScript -->
+        </select>
+
+        <label for="toWarehouse">Целевой склад:</label>
+        <select id="toWarehouse" required>
+          <option value="">-- Выберите целевой склад --</option>
+          <!-- Опции будут заполнены через JavaScript -->
+        </select>
+
+        <label for="moveQuantity">Количество:</label>
+        <input type="number" id="moveQuantity" min="1" required>
+
+        <button type="submit">Переместить</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="debtorsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="debtorsClose">&times;</span>
+      <h2>Управление Должниками</h2>
+      <button id="addDebtorBtn">Добавить должника</button>
+
+      <table id="debtorsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Долг</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Список должников через JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Модальное окно для добавления/редактирования должника -->
+  <div id="editDebtorModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="editDebtorClose">&times;</span>
+      <h2 id="editDebtorTitle">Редактировать должника</h2>
+      <form id="editDebtorForm">
+        <input type="hidden" id="debtorId">
+        
+        <label for="debtorName">Имя должника:</label>
+        <input type="text" id="debtorName" required>
+
+        <label for="debtorDebt">Долг:</label>
+        <input type="number" id="debtorDebt" min="0" step="0.01" required>
+
+        <button type="submit">Сохранить</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно для назначения продавца -->
+  <div id="assignSellerModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="assignSellerClose">&times;</span>
+      <h2>Назначить продавца</h2>
+      <form id="assignSellerForm">
+        <input type="hidden" id="assignWarehouseId">
+        
+        <label for="newSellerSelect">Выберите продавца:</label>
+        <select id="newSellerSelect" required>
+          <option value="">-- Выберите продавца --</option>
+          <!-- Опции будут заполнены через JavaScript -->
+        </select>
+        
+        <button type="submit">Назначить</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно для редактирования продукта -->
+  <div id="editProductModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="editProductClose">&times;</span>
+      <h2>Редактировать продукт</h2>
+      <form id="editProductForm">
+        <input type="hidden" id="editProductId">
+        
+        <label for="editProductName">Название:</label>
+        <input type="text" id="editProductName" required>
+        
+        <label for="editProductQuantity">Количество:</label>
+        <input type="number" id="editProductQuantity" min="0" required>
+        
+        <label for="editProductPrice">Цена:</label>
+        <input type="number" id="editProductPrice" min="0" step="0.01" required>
+        
+        <button type="submit">Сохранить</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно для добавления товара в склад -->
+  <div id="addProductToWarehouseModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="addProductToWarehouseClose">&times;</span>
+      <h2>Добавить товар на склад</h2>
+      <form id="addProductToWarehouseForm">
+        <label for="newProductName">Название товара:</label>
+        <input type="text" id="newProductName" required>
+        
+        <label for="newProductQuantity">Количество:</label>
+        <input type="number" id="newProductQuantity" min="1" required>
+        
+        <label for="newProductPrice">Цена:</label>
+        <input type="number" id="newProductPrice" min="0" step="0.01" required>
+        
+        <button type="submit">Добавить товар</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Подключение JavaScript файла -->
+  <script src="app.js"></script>
+</body>
+</html>
