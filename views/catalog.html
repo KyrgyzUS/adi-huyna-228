@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Каталог</title>
+  </head>
+  <body>
+    <h1>Каталог</h1>
+    <form method="get">
+      <label>Поиск по артикулу:</label>
+      <input type="text" name="article" />
+      <label>Цвет:</label>
+      <input type="text" name="color" />
+      <button type="submit">Поиск</button>
+    </form>
+
+    <ul>
+      <% for (let p of products) { %>
+        <li>
+          <strong><%= p.article %></strong> - <%= p.name %> - 
+          Цена: <%= p.price %> - Цвет: <%= p.color %> - Остаток: <%= p.quantity %>
+          <!-- Кнопка "добавить в заказ" (пример)-->
+          <form action="/orders/<some_order_number>/add-item" method="post" style="display:inline;">
+            <input type="hidden" name="article" value="<%= p.article %>"/>
+            <input type="hidden" name="color" value="<%= p.color %>"/>
+            <input type="number" name="quantity" value="1"/>
+            <input type="number" step="0.01" name="discount" placeholder="Скидка, если есть"/>
+            <button type="submit">Добавить в заказ</button>
+          </form>
+        </li>
+      <% } %>
+    </ul>
+  </body>
+</html>
