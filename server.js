@@ -6,7 +6,19 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 5432;
 const productsRoutes = require('./routes/products');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
 
+// Добавьте это для парсинга JSON
+app.use(express.json());
+
+// Если вы используете URL-кодированные данные
+app.use(express.urlencoded({ extended: true }));
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log('Сервер запущен');
+});
 app.use('/products', productsRoutes);
 
 
