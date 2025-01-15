@@ -1,63 +1,44 @@
-require('dotenv').config();
+// server.js
 const express = require('express');
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
-const path = require('path');
-
-const authRoutes = require('./routes/authRoutes');
-const catalogRoutes = require('./routes/catalogRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
-const pool = require('./models/db');
-
-const { isAuthenticated, isOwner, isSellerOrOwner } = require('./middlewares/roleMiddleware');
+const { Pool } = require('pg');
+const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 5432;
+const productsRoutes = require('./routes/products');
 
-// Настройка шаблонизатора EJS или HTML
-app.set('view engine', 'ejs');
-// Папка с ejs-шаблонами
-app.set('views', path.join(__dirname, 'views'));
+app.use('/products', productsRoutes);
 
-// Парсер формы
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
-// Настройка сессий в PostgreSQL
-app.use(
-  session({
-    store: new pgSession({
-      pool: pool, // наш пул
-      tableName: 'session' // имя таблицы для хранения сессий, нужно создать отдельно при желании
-    }),
-    secret: process.env.SESSION_SECRET || 'secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 } // 1 час
-  })
-);
+// Подключение к базе данных Heroku PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
-// Роуты авторизации
-app.use('/', authRoutes);
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Каталог
-app.use('/catalog', catalogRoutes);
-
-// Заказы
-app.use('/orders', isAuthenticated, orderRoutes);
-
-// Аналитика (только для owner)
-app.use('/analytics', isOwner, analyticsRoutes);
-
-// Главная страница (просто перенаправим на каталог или сделаем свою)
-app.get('/', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
+// Проверка подключения к базе данных
+pool.connect((err) => {
+  if (err) {
+    console.error('Ошибка подключения к базе данных:', err);
+  } else {
+    console.log('Успешное подключение к базе данных');
   }
-  res.redirect('/catalog');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+// Пример базового маршрута
+app.get('/', (req, res) => {
+  res.send('Магазин работает! Добро пожаловать.');
 });
+
+// Запуск сервера
+app.listen(port, () => {
+  console.log(`Сервер запущен на порту ${port}`);
+});
+
+module.exports = pool;

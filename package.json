@@ -7,7 +7,8 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
     "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -26,5 +27,6 @@
   "bugs": {
     "url": "https://github.com/KyrgyzUS/adi-huyna-228/issues"
   },
-  "homepage": "https://github.com/KyrgyzUS/adi-huyna-228#readme"
+  "homepage": "https://github.com/KyrgyzUS/adi-huyna-228#readme",
+  "type": "commonjs"
 }
